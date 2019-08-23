@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="chatDAO">
+
+	<select id="selectRooms" parameterType="String"
+		resultType="chatRoomDTO">
+		SELECT
+		*
+		FROM chatRoom
+		WHERE members like #{member}
+	</select>
+	<select id="getContent" parameterType="int"
+		resultType="chatContentDTO">
+		select * from chatContent where
+		chatRoomNum = #{chatRoomNum} AND contentTime = (select max(contentTime)
+		from chatContent
+		where chatRoomNum = #{chatRoomNum})
+	</select>
+
+	<resultMap type="chatRoomDTO" id="roomRs">
+		<result property="members" column="members" />
+		<result property="chatRoomName" column="chatRoomName" />
+		<result property="createTime" column="createTime" />
+		<result property="chatRoomNum" column="chatRoomNum" />
+		<result property="limitMember" column="limitMembers" />
+		<result property="leader" column="leader" />
+		<result property="thumbnail" column="thumbnail" />
+	</resultMap>
+	<resultMap type="chatContentDTO" id="conRs">
+		<result property="content" column="content" />
+		<result property="contentTime" column="contentTime" />
+		<result property="chatRoomNum" column="chatRoomNum" />
+		<result property="member" column="member" />
+	</resultMap>
+
+	<select id="getContents" parameterType="int">
+		SELECT chatContent.content,
+		chatContent.contentTime,
+		chatContent.chatRoomNum, chatContent.member,
+		chatRoom.chatRoomNum
+		FROM chatContent chatContent
+		INNER JOIN chatRoom ON chatContent.chatRoomNum
+		= chatRoom.chatRoomNum
+		WHERE chatRoom.chatRoomNum = #{chatRoomNum} AND
+		ROWNUM <![CDATA[<]]>=
+		50
+	</select>
+
+	<insert id="createRoom" parameterType="chatRoomDTO">
+		INSERT INTO chatRoom
+		values
+		(#{members},#{chatRoomName},SYSTIMESTAMP,
+		chatRoom_seq.NEXTVAL,#{limitMember},#{leader},{#thumbnail})
+	</insert>
+	<insert id="addContent" parameterType="chatContentDTO">
+		INSERT INTO chatContent
+		VALUES(#{content},SYSTIMESTAMP,#{chatRoomNum},#{member})
+	</insert>
+
+	<!-- <update id="updateSomething" parameterType="#modelname"> UPDATE tablename1 
+		SET columnname1=#{param1} WHERE columnname2 = #{param2} </update> -->
+
+	<!-- <delete id="deleteSomething" parameterType="int"> DELETE FROM tablename1 
+		WHERE columnname1 = #{param1} </delete> -->
+
+</mapper>
